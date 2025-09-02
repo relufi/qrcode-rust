@@ -205,6 +205,35 @@ impl<'a, P: Pixel> Renderer<'a, P> {
 
         canvas.into_image()
     }
+
+    /// Renders the QR code into an image.
+    pub fn build_with_size(&self, box_width: u32, box_height: u32) -> P::Image {
+        let w = self.modules_count;
+        let qz = if self.has_quiet_zone { self.quiet_zone } else { 0 };
+        let width = w + 2 * qz;
+
+        let (mw, mh) = self.module_size;
+        let real_width = width * mw;
+        let real_height = width * mh;
+
+        let mut canvas = P::Canvas::new(box_width, box_height, self.dark_color, self.light_color);
+        let mut i = 0;
+        let fix_left = (box_width - real_width) / 2;
+        let fix_top = (box_height - real_height) / 2;
+        for y in 0..width {
+            for x in 0..width {
+                if qz <= x && x < w + qz && qz <= y && y < w + qz {
+                    if self.content[i] != Color::Light {
+                        canvas.draw_dark_rect(x * mw + fix_left, y * mh + fix_top, mw, mh);
+                    }
+                    i += 1;
+                }
+            }
+        }
+
+        canvas.into_image()
+    }
+
 }
 
 //}}}
